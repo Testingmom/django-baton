@@ -388,6 +388,10 @@
       min-width: auto !important;
       width: auto;
     }
+
+    .inline-deletelink {
+      float: none !important;
+    }
   }
 
   select[multiple] {
@@ -505,6 +509,16 @@
       margin-left: auto;
       order: 1;
       width: 200px;
+
+      @include media-breakpoint-up(md) {
+        margin-bottom: 0;
+      }
+    }
+
+    > a {
+      margin-bottom: 15px;
+      margin-left: .25rem;
+      order: 1;
 
       @include media-breakpoint-up(md) {
         margin-bottom: 0;
@@ -710,6 +724,7 @@
     @extend .btn-warning;
     float: right;
     margin-right: 15px;
+    white-space: nowrap;
 
     &::before {
       @extend %font-awesome;

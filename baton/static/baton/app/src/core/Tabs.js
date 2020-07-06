@@ -21,6 +21,7 @@ let Tabs = {
     return this.main.length === 1
   },
   createNav: function () {
+    this.mainOrder = 0
     this.tabsEl = []
     this.domTabsEl = []
     let classes = this.main.attr('class')
@@ -28,12 +29,18 @@ let Tabs = {
       if (/baton-tab-/.test(cl)) {
         this.tabsEl.push(cl.substring(10))
       }
+      if (/order-/.test(cl)) {
+        this.mainOrder = parseInt(cl.replace('order-', ''))
+      }
     })
+
+    let currentOrder = this.mainOrder ? 0 : this.mainOrder + 1
 
     this.nav = $('<ul />', { 'class': 'nav nav-tabs' })
     $('<li />', { 'class': 'nav-item' })
+      .css('order', this.mainOrder)
       .append($('<a />', {
-        'class': 'nav-link active',
+        'class': 'nav-link' + (this.mainOrder === 0 ? ' active' : ''),
         'data-toggle': 'tab',
         href: '#main'
       }).text(this.main.children('h2').hide().text()).on('click', function () {
@@ -44,7 +51,6 @@ let Tabs = {
     this.tabsEl.forEach((el) => {
       let domEl
       if (/^group-/.test(el)) {
-        console.log(el)
         domEl = $('<div />').attr('data-baton-tab', el)
         let items = el.substr(6).split('--')
         items.forEach((item) => {
@@ -54,7 +60,6 @@ let Tabs = {
           } else {
             e = this.createFieldsetEl(item)
           }
-          console.log(e)
           domEl.append(e)
         })
       } else if (/^inline-/.test(el)) {
@@ -64,14 +69,19 @@ let Tabs = {
       }
       this.domTabsEl.push(domEl)
       $('<li />', { 'class': 'nav-item' })
+        .css('order', currentOrder)
         .append($('<a />', {
-          'class': 'nav-link',
+          'class': 'nav-link' + (currentOrder === 0 ? ' active' : ''),
           'data-toggle': 'tab',
           href: '#' + el
         }).text(domEl.find('h2:first-child').first().hide().text()).on('click', function () {
           location.hash = $(this).attr('href')
         }))
         .appendTo(this.nav)
+      currentOrder += 1
+      if (currentOrder === this.mainOrder) {
+        currentOrder += 1
+      }
     })
 
     this.main.before(this.nav)
@@ -104,7 +114,7 @@ let Tabs = {
     let self = this
     this.tabContent = $('<div />', { 'class': 'tab-content' })
     this.tabMain = $('<div />', {
-      'class': 'tab-pane active',
+      'class': 'tab-pane' + (this.mainOrder === 0 ? ' active' : ''),
       'id': 'main'
     }).appendTo(this.tabContent)
     this.main.parent().children(':not(.nav-tabs):not(.submit-row):not(.errornote)').each((index, el) => {
@@ -112,12 +122,18 @@ let Tabs = {
     })
     this.nav.after(this.tabContent)
 
+    let currentOrder = this.mainOrder ? 0 : this.mainOrder + 1
+
     this.domTabsEl.forEach((el, index) => {
       let tabPane = $('<div />', {
-        'class': 'tab-pane',
+        'class': 'tab-pane' + (currentOrder === 0 ? ' active' : ''),
         'id': self.tabsEl[index]
       }).appendTo(this.tabContent)
       el.appendTo(tabPane)
+      currentOrder += 1
+      if (currentOrder === this.mainOrder) {
+        currentOrder += 1
+      }
     })
   },
   showErrors: function () {

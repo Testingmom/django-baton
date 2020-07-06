@@ -21,6 +21,8 @@ Documentation: [readthedocs](http://django-baton.readthedocs.io/)
 - [Signals](#signals)
 - [Text Input Filters](#text-input-filters)
 - [Form Tabs](#form-tabs)
+- [Form Includes](#form-includes)
+- [Collapsable stacked inlines entries](#collapsable-stackedinline)
 - [Customization](#customization)
 - [Tests](#tests)
 - [Contributing](#contributing)
@@ -38,6 +40,8 @@ Everything is styled through CSS and when required, JS is used.
 - Custom and flexible sidebar menu
 - Text input filters facility
 - Form tabs out of the box
+- Easy way to include templates in the change form page
+- Collapsable stacke inline entries
 - Lazy loading of uploaded images
 - Optional display of changelist filters in a modal
 - Optional index page filled with google analytics widgets
@@ -49,9 +53,10 @@ The following packages are required to manage the Google Analytics index:
 - google-api-python-client
 - oauth2client==1.5.2
 
-At the moment __baton__ defines only 3 custom templates:
+At the moment __baton__ defines only 4 custom templates:
 
 - `admin/base_site.html`, needed to inject the JS application (which includes css and images, compiled with [webpack](https://webpack.github.io/));
+- `admin/change_form.html`, needed to inject the `baton_form_includes` stuff. In any case, the template extends the default one and just adds some stuff at the end of the content block, so it's still full compatible with the django one;
 - `admin/delete_confirmation.html`, needed because of a bug (IMO) in the template, in particular the `extra_head` block does not contain the parent content, hence it must be overridden (FIXED IN django 1.11, remains until baton will support django 1.10);
 - `admin/delete_selected_confirmation.html`, same as above.
 
@@ -136,6 +141,8 @@ The configuration dictionary must be defined inside your settings:
         'SHOW_MULTIPART_UPLOADING': True,
         'ENABLE_IMAGES_PREVIEW': True,
         'CHANGELIST_FILTERS_IN_MODAL': True,
+        'MENU_ALWAYS_COLLAPSED': False,
+        'MENU_TITLE': 'Menu',
         'MENU': (
             { 'type': 'title', 'label': 'main', 'apps': ('auth', ) },
             {
@@ -157,7 +164,7 @@ The configuration dictionary must be defined inside your settings:
             { 'type': 'title', 'label': 'Contents', 'apps': ('flatpages', ) },
             { 'type': 'model', 'label': 'Pages', 'name': 'flatpage', 'app': 'flatpages' },
             { 'type': 'free', 'label': 'Custom Link', 'url': 'http://www.google.it', 'perms': ('flatpages.add_flatpage', 'auth.change_user') },
-            { 'type': 'free', 'label': 'My parent voice', 'default_open': True, children': [
+            { 'type': 'free', 'label': 'My parent voice', 'default_open': True, 'children': [
                 { 'type': 'model', 'label': 'A Model', 'name': 'mymodelname', 'app': 'myapp' },
                 { 'type': 'free', 'label': 'Another custom link', 'url': 'http://www.google.it' },
             ] },
@@ -176,6 +183,8 @@ Default value is `True`.
 - `SHOW_MULTIPART_UPLOADING`: if set to `True` an overlay with a spinner appears when submitting a `multipart/form-data` form.
 - `ENABLE_IMAGES_PREVIEW`: if set to `True` a preview is displayed above all input file fields which contain images. You can control how the preview is displayed by overriding the class `.baton-image-preview`. By default, previews have 100px height and with a box shadow (on "hover").
 - `CHANGELIST_FILTERS_IN_MODAL`: if set to `True` the changelist filters are opened in a centered modal above the document, useful when you set many filters. By default, its value is `False` and the changelist filters appears from the right side of the changelist table.
+- `MENU_ALWAYS_COLLAPSED`: if set to `True` the menu is hidden at page load, and the navbar toggler is always visible, just click it to show the sidebar menu.
+- `MENU_TITLE`: the menu title shown in the sidebar. If an empty string, the menu title is hidden and takes no space on larger screens, the default menu voice will still be visible in the mobile menu.
 
 `MENU` and `ANALYTICS` configurations in detail:
 
@@ -251,6 +260,10 @@ To use these, just override the baton `admin/base_site.html` template and regist
     <script>
         {% baton_config 'CONFIRM_UNSAVED_CHANGES' as confirm_unsaved_changes %}
         {% baton_config 'SHOW_MULTIPART_UPLOADING' as show_multipart_uploading %}
+        {% baton_config 'ENABLE_IMAGES_PREVIEW' as enable_images_preview %}
+        {% baton_config 'CHANGELIST_FILTERS_IN_MODAL' as changelist_filters_in_modal %}
+        {% baton_config 'MENU_ALWAYS_COLLAPSED' as menu_always_collapsed %}
+        {% baton_config 'MENU_TITLE' as menu_title %}
         (function ($, undefined) {
             $(window).on('load', function () {
                 // init listeners
@@ -262,8 +275,12 @@ To use these, just override the baton `admin/base_site.html` template and regist
                     api: {
                         app_list: '{% url 'baton-app-list-json' %}'
                     },
-                    confirmUnsavedChanges: {% if confirm_unsaved_changes %}true{% else%}false{% endif %},
-                    showMultipartUploading: {% if show_multipart_uploading %}true{% else%}false{% endif %}
+                    confirmUnsavedChanges: {{ confirm_unsaved_changes|yesno:"true,false" }},
+                    showMultipartUploading: {{ show_multipart_uploading|yesno:"true,false" }},
+                    enableImagesPreview: {{ enable_images_preview|yesno:"true,false" }},
+                    changelistFiltersInModal: {{ changelist_filters_in_modal|yesno:"true,false" }},
+                    menuAlwaysCollapsed: {{ menu_always_collapsed|yesno:"true,false" }},
+                    menuTitle: '{{ menu_title|escapejs }}'
                 });
             })
         })(jQuery, undefined)
@@ -335,7 +352,7 @@ Let's see how to define tabs in your admin forms (everything is done through js,
         fieldsets = (
             ('Main', {
                 'fields': ('label', ),
-                'classes': ('baton-tabs-init', 'baton-tab-inline-attribute', 'baton-tab-fs-content', 'baton-tab-group-fs-tech--inline-feature', ),
+                'classes': ('order-0', 'baton-tabs-init', 'baton-tab-inline-attribute', 'baton-tab-fs-content', 'baton-tab-group-fs-tech--inline-feature', ),
                 'description': 'This is a description text'
 
             }),
@@ -357,6 +374,7 @@ As you can see these are the rules:
 
 - Inline classes remain the same, no action needed
 - On the first fieldset, define a `baton-tabs-init` class which enables tabs
+- On the first fieldset, you can add an `order-[NUMBER]` class, which will be used to determined in which position to place the first fieldset. The order starts from 0, and if omitted, the first fieldset has order 0. If you assign for example the class `order-2` to the first fieldset, then the first fieldset will be the third tab, while all other tabs will respect the order of declaration.
 - For every inline you want to put in a separate tab, add a class `baton-tab-inline-MODELNAME` or `baton-tab-inline-RELATEDNAME` if you've specified a related name in the model foreign key field
 - For every fieldset you want to put in a separate tab, add a class `baton-tab-fs-CUSTOMNAME`, and add a class `tab-fs-CUSTOMNAME` on the fieldset
 - For every group you want to put in a separate tab, add a class `baton-tab-group-ITEMS`, where items can be inlines (`inline-RELATEDNAME`) and/or fieldsets (`fs-CUSTOMNAME`) separated by a double hypen `--`. Also add a class `tab-fs-CUSTOMNAME` on the fieldset items.
@@ -366,6 +384,59 @@ Other features:
 
 - When a field has an error, the first tab containing errors is opened automatically
 - You can open a tab on page load just by adding an hash to the url, i.e. `#inline-feature`, `#fs-content`, `#group-fs-tech--inline-feature`
+
+## [Form Includes](#form-includes)
+
+Baton lets you include templates directly inside the change form page, in any position you desire. It's as simple as specifying the template path, the field name used as anchor and the position of the template:
+
+```python
+@admin.register(News)
+class NewsAdmin(admin.ModelAdmin):
+    #...
+    baton_form_includes = [
+        ('news/admin_datetime_include.html', 'datetime', 'top', ),
+        ('news/admin_content_include.html', 'content', 'above', )
+    ]
+```
+
+In this case, Baton will place the content of the `admin_datetime_include.html` template at the top of the datetime field row, and the content of the `admin_content_include.html` above the content field row.
+
+![Baton form includes](docs/images/baton-form-includes.png)
+
+You can specify the following positions:
+
+|Position|Description|
+|:--------|:-----------|
+|`top`| the template is placed inside the form row, at the top|
+|`bottom`| the template is placed inside the form row, at the bottom|
+|`above`| the template is placed above the form row|
+|`below`| the template is placed below the form row|
+
+And, of course, you can access the `{{ original }}` object variable inside your template.
+
+It works seamlessly with the tab facility, if you include content related to a field inside one tab, then the content will be placed in the same tab.
+
+## <a name="collapsable-stackedinline"></a>Collapsable stacked inlines entries
+
+![Screenshot](docs/images/collapsable_stackedinline.png)
+
+Baton lets you collapse single stacked inline entries, just add a `collapse-entry` class to the inline, with or without the entire collapse class:
+
+```
+class VideosInline(admin.StackedInline):
+    model = Video
+    extra = 1
+    classes = ('collapse-entry', )  # or ('collapse', 'collapse-entry', )
+```
+
+And if you want the first entry to be initially expanded, add also the `expand-first` class:
+
+```
+class VideosInline(admin.StackedInline):
+    model = Video
+    extra = 1
+    classes = ('collapse-entry', 'expand-first', )
+```
 
 ## <a name="customization"></a>Customization
 

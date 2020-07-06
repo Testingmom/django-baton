@@ -20,6 +20,8 @@ Features
 - Custom and flexible sidebar menu
 - Text input filters facility
 - Configurable form tabs
+- Easy way to include templates in the change form page
+- Collapsable stacke inline entries
 - Lazy load of current uploaded images
 - Optional index page filled with google analytics widgets
 - Full customization available recompiling the provided js app
@@ -36,6 +38,8 @@ Getting started
    signals
    text_input_filters
    form_tabs
+   form_includes
+   collapsable_stackedinline
 
 Advanced customization
 ----------------------

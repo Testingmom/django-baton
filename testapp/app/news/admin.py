@@ -28,6 +28,7 @@ class AttachmentsInline(admin.TabularInline):
 class VideosInline(admin.StackedInline):
     model = Video
     extra = 1
+    classes = ('collapse-entry', 'expand-first', )
 
 
 @admin.register(News)
@@ -37,9 +38,15 @@ class NewsAdmin(admin.ModelAdmin):
     inlines = [AttachmentsInline, VideosInline]
 
     fieldsets = (
+        ('Dates', {
+            'fields': ('date', 'datetime', ),
+            'classes': ('order-1', 'baton-tabs-init', 'baton-tab-fs-main', 'baton-tab-fs-flags', 'baton-tab-group-fs-attachments--inline-attachments', 'baton-tab-group-fs-videos--inline-videos'),
+            'description': 'This is a description text'
+
+        }),
         ('Main', {
-            'fields': ('category', 'date', 'datetime', 'title', 'content', ),
-            'classes': ('baton-tabs-init', 'baton-tab-fs-flags', 'baton-tab-group-fs-attachments--inline-attachments', 'baton-tab-group-fs-videos--inline-videos'),
+            'fields': ('category', 'title', 'image', 'content', ),
+            'classes': ('tab-fs-main', ),
             'description': 'This is a description text'
 
         }),
@@ -61,3 +68,8 @@ class NewsAdmin(admin.ModelAdmin):
 
         }),
     )
+
+    baton_form_includes = [
+        ('news/admin_datetime_include.html', 'datetime', 'top', ),
+        ('news/admin_content_include.html', 'content', 'above', )
+    ]

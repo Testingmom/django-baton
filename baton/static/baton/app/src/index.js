@@ -2,6 +2,7 @@
 import 'bootstrap/dist/js/bootstrap'
 import './styles/baton.scss'
 
+import Template from './core/Template'
 import Dispatcher from 'js-event-dispatcher/dist/EventDispatcher'
 import Navbar from './core/Navbar'
 import Footer from './core/Footer'
@@ -21,7 +22,7 @@ window.Baton = {
     this.initialized = true
     let page = this.page()
 
-    Navbar.init()
+    Navbar.init(config)
     Dispatcher.emit('onNavbarReady')
     if (page !== 'login' && !/_popup/.test(location.search)) {
       Menu.init(config, Dispatcher)
@@ -45,9 +46,19 @@ window.Baton = {
     if (page === 'add_form' || page === 'change_form') {
       Tabs.init(Dispatcher)
     }
+
+    // tooltips
+    this.loadTooltips()
+
     console.info('Baton:', 'ready')
     document.body.className += ' baton-ready'
+    if (config.menuAlwaysCollapsed) {
+      document.body.className += ' menu-mobile'
+    }
     Dispatcher.emit('onReady')
+  },
+  loadTooltips: function () {
+    $('[title]').tooltip()
   },
   page: function () {
     if (/^(\/[a-z]{2})?\/admin\/$/.test(location.pathname)) {

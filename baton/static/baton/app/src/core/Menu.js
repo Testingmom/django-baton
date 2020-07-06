@@ -9,9 +9,14 @@ let Menu = {
   init: function (config, Dispatcher) {
     this.Dispatcher = Dispatcher
     this.appListUrl = config.api.app_list
+    this.menuTitle = config.menuTitle
     this.fixNodes()
     this.fetchData()
     this.setHeight()
+    let self = this
+    $(window).on('resize', function () {
+      self.setHeight()
+    })
   },
   fixNodes: function () {
     let container = $('<div/>', { 'class': 'container-fluid' })
@@ -25,7 +30,7 @@ let Menu = {
       .appendTo(row)
 
     $('#content > h1').after($('.messagelist'))
-    let title = $('<h1 />').text('Menu')
+    let title = $('<h1 />', { 'class': this.menuTitle === '' ? 'empty-text' : '' }).text(this.menuTitle ? this.menuTitle : 'Menu')
     $('<i/>', { 'class': 'fa fa-times' })
       .click(() => { $(document.body).removeClass('menu-open') })
       .appendTo(title)
@@ -37,13 +42,13 @@ let Menu = {
       self.render(data)
       self.Dispatcher.emit('onMenuReady')
     })
-    .fail(function (err) {
-      console.error(err.responseText)
-      self.menu.remove()
-      $('#content').removeClass('col-md-9').removeClass('col-lg-10')
-        .css('flex-grow', 1)
-      self.Dispatcher.emit('onMenuError')
-    })
+      .fail(function (err) {
+        console.error(err.responseText)
+        self.menu.remove()
+        $('#content').removeClass('col-md-9').removeClass('col-lg-10')
+          .css('flex-grow', 1)
+        self.Dispatcher.emit('onMenuError')
+      })
   },
   setHeight: function () {
     let height = $(window).height() - $('#header').height() - 17 // nav padding and border

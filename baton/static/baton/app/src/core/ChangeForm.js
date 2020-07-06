@@ -31,6 +31,8 @@ let ChangeForm = {
     if (opts.enableImagesPreview) {
       this.lazyLoadImages()
     }
+    this.activateEntryCollapsing()
+    this.initTemplates()
   },
   activate: function () {
     this.form.on('submit', () => (this.formSubmitting = true))
@@ -90,7 +92,6 @@ let ChangeForm = {
     this.form.find('.wrapped-fields-container > .fieldBox').children().unwrap()
   },
   fixNewlines: function () {
-    console.log('called')
     $('.form-row br').replaceWith('<span class="newline"></span>')
   },
   lazyLoadImages: function () {
@@ -112,6 +113,43 @@ let ChangeForm = {
           }
           image.src = url
         }
+      }
+    })
+  },
+  activateEntryCollapsing: function () {
+    $('.collapse-entry h3')
+      .addClass('entry-collapsed entry-collapse-full-toggler')
+      .append('<span />') // just to have the toggler right aligned
+      .append('<span class="entry-collapse-toggler" />')
+    $('.collapse-entry')
+      .click(function (e) {
+        let target = $(e.target)
+        if (target.hasClass('entry-collapse-full-toggler')) {
+          target.toggleClass('entry-collapsed')
+        } else if (target.parent('.entry-collapse-full-toggler').length > 0) {
+          target.parent('.entry-collapse-full-toggler').toggleClass('entry-collapsed')
+        }
+      })
+    $('.form-row.errors').each(function (index, el) {
+      if ($(el).parent('fieldset').prev('h3.entry-collapsed')) {
+        $(el).parent('fieldset').prev('h3.entry-collapsed').removeClass('entry-collapsed')
+      }
+    })
+  },
+  initTemplates: function () {
+    const positionMap = {
+      above: 'before',
+      below: 'after',
+      top: 'prepend',
+      bottom: 'append'
+    }
+    $('template').each(function (index, template) {
+      let field = $(template).attr('id').replace('template-', '')
+      let position = positionMap[$(template).attr('data-position')]
+      if (position !== undefined) {
+        $('.form-row.field-' + field)[position]($(template).html())
+      } else {
+        console.error('Baton: wrong form include position detected')
       }
     })
   }

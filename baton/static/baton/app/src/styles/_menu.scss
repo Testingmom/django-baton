@@ -65,8 +65,7 @@ body:not(.menu-mobile) {
     }
   }
 
-  .depth-0,
-  .depth-1 {
+  .depth-0, .top-level > .depth-1 {
     background: $menu-bg;
     height: 100%;
     left: 0;
@@ -132,11 +131,11 @@ body:not(.menu-mobile) {
 
     .title {
       background: $menu-voice-title-bg !important;
-
       > span {
         color: $menu-voice-title-color !important;
         font-weight: bold;
         text-transform: uppercase;
+        cursor: pointer;
       }
     }
   }
@@ -154,6 +153,21 @@ body:not(.menu-mobile) {
         padding-left: 10px;
       }
     }
+    ul {
+      padding-left: 15px;
+    }
+    span.has-children {
+      color: $menu-voice-title-color !important;
+      cursor: pointer;
+    }
+    .depth-1 {
+      display: none;
+      list-style: none;
+
+      .nav-back {
+        display: none;
+      }
+    }
   }
 
   .title > .depth-1 li {
@@ -164,12 +178,12 @@ body:not(.menu-mobile) {
 
 
   .open {
-    @include media-breakpoint-up(lg) {
-      .has-children {
-        &::after {
-          content: '\f107' !important;
-        }
+    > .has-children {
+      &::after {
+        content: '\f107' !important;
       }
+    }
+    @include media-breakpoint-up(lg) {
 
       ul,
       li {
@@ -221,7 +235,7 @@ body:not(.menu-mobile) {
 
   .with-active {
     @include media-breakpoint-up(lg) {
-      .has-children {
+      > .has-children {
         &::after {
           content: '\f107' !important;
         }

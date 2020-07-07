@@ -143,7 +143,9 @@ let ChangeForm = {
       top: 'prepend',
       bottom: 'append'
     }
+    console.log('init templates')
     $('template').each(function (index, template) {
+      console.log(index, template)
       let field = $(template).attr('id').replace('template-', '')
       let position = positionMap[$(template).attr('data-position')]
       if (position !== undefined) {

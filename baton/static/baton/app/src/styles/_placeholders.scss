@@ -1,7 +1,7 @@
 // scss-lint:disable IdSelector PlaceholderInExtend NestingDepth QualifyingElement SelectorDepth ImportantRule SelectorFormat
 %font-awesome {
   display: inline-block;
-  font-family: 'Font Awesome\ 5 Free';
+  font-family: 'Font Awesome\ 5 Pro';
   margin-right: 5px;
 }
 
@@ -694,7 +694,7 @@
 
       &::before {
         content: '\f040';
-        font-family: 'Font Awesome\ 5 Free';
+        font-family: 'Font Awesome\ 5 Pro';
         margin-right: 4px;
       }
 

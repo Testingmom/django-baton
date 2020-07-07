@@ -42,19 +42,44 @@ let Menu = {
       self.render(data)
       self.Dispatcher.emit('onMenuReady')
     })
-      .fail(function (err) {
-        console.error(err.responseText)
-        self.menu.remove()
-        $('#content').removeClass('col-md-9').removeClass('col-lg-10')
-          .css('flex-grow', 1)
-        self.Dispatcher.emit('onMenuError')
-      })
+    .fail(function (err) {
+      console.error(err.responseText)
+      self.menu.remove()
+      $('#content').removeClass('col-md-9').removeClass('col-lg-10')
+        .css('flex-grow', 1)
+      self.Dispatcher.emit('onMenuError')
+    })
   },
   setHeight: function () {
     let height = $(window).height() - $('#header').height() - 17 // nav padding and border
     this.menu.css('min-height', height + 'px')
     $('#content').css('padding-bottom', ($('#footer').height() + 20) + 'px')
   },
+
+  addLink: function(model, subUl, li, subLi) {
+    let active = false
+    if (model.url) {
+      let pathRexp = new RegExp(model.url)
+      active = pathRexp.test(location.pathname)
+    }
+    let el = $('<li />')
+    if (active) {
+      el.addClass('active')
+      li.addClass('with-active')
+      if (subLi) {
+        subLi.addClass('with-active')
+      }
+    }
+    let a = $('<a />', {
+      href: model.url
+    }).text(model.label).appendTo(el)
+    // icon
+    if (model.icon) {
+      $('<i />', {'class': model.icon}).prependTo(a)
+    }
+    el.appendTo(subUl)
+  },
+
   render: function (data) {
     let self = this
     let mainUl = $('<ul/>', { 'class': 'depth-0' }).appendTo(self.menu)
@@ -84,24 +109,20 @@ let Menu = {
         a.addClass('has-children')
 
         voice.children.forEach((model, i) => {
-          let active = false
-          if (model.url) {
-            let pathRexp = new RegExp(model.url)
-            active = pathRexp.test(location.pathname)
+          if (model.hasOwnProperty('children') && model.children.length) {
+            let subLi = $('<li />')
+            let span = $('<span class="has-children"/>').text(model.label).appendTo(subLi)
+            if (model.icon) {
+              $('<i />', {'class': model.icon}).prependTo(span)
+            }
+            let subSubUl = $('<ul />', { 'class': 'depth-1' }).appendTo(subLi)
+            model.children.forEach((m, i) => {
+              self.addLink(m, subSubUl, li, subLi)
+            })
+            subLi.appendTo(subUl)
+          } else {
+            self.addLink(model, subUl, li)
           }
-          let subLi = $('<li />')
-          if (active) {
-            subLi.addClass('active')
-            li.addClass('with-active')
-          }
-          let a = $('<a />', {
-            href: model.url
-          }).text(model.label).appendTo(subLi)
-          // icon
-          if (model.icon) {
-            $('<i />', { 'class': model.icon }).prependTo(a)
-          }
-          subLi.appendTo(subUl)
         })
       }
       li.appendTo(mainUl)
